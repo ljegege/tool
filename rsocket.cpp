@@ -3,38 +3,51 @@
 CRSocket::CRSocket()
 {
     sockFd = -1;
-    //srcPort = -1;
-    //destPort = -1;
+    sockType = -1;
+    isConnect = false;
+    isBind = false;
 }
 
 CRSocket::~CRSocket()
 {
     ::close(sockFd);
 }
+
+inline bool CRSocket::verifyAddrPort(string addr, int port)
+{
+    if(port == -1 || addr == ""){
+        return false;
+    }else{
+        return true;
+    }
+}
 int CRSocket::sendto(char* psendData, int len, string strDestAddr, int destPort, int flag)
 {
-    if(sockFd < 0){
+    if(sockFd < 0 || sockType != SOCK_DGRAM){
         return -1;
     }
 
-    int sendCnt;
-    // 判断是否已经connect
-    if(isConnect){
-        sendCnt = ::sendto(sockFd, psendData, len, 0, (struct sockaddr *)&destAddr, sizeof(destAddr));
+    if(!verifyAddrPort(strDestAddr, destPort)){
+        // 判断是否已经connect
+        if(isConnect){
+            return ::sendto(sockFd, psendData, len, 0, (struct sockaddr *)&destAddr, sizeof(destAddr));
+        }else{
+            return -1;
+        }
+
     }
     else{
         struct sockaddr_in tmpDestAddr;
         tmpDestAddr.sin_family = AF_INET;
         tmpDestAddr.sin_port = htons(destPort);
         tmpDestAddr.sin_addr.s_addr = inet_addr(strDestAddr.c_str());
-        sendCnt = ::sendto(sockFd, psendData, len, 0, (struct sockaddr *)&tmpDestAddr, sizeof(destAddr));
+        return ::sendto(sockFd, psendData, len, 0, (struct sockaddr *)&tmpDestAddr, sizeof(destAddr));
     }
-    return sendCnt;
 }
 
 int CRSocket::recvfrom(char* precvData, int len, string *pstrDestAddr, int *pdestPort, int flag)
 {
-    if(sockFd < 0){
+    if(sockFd < 0 || sockType != SOCK_DGRAM){
         return -1;
     }
     int recvCnt;
@@ -50,60 +63,85 @@ int CRSocket::recvfrom(char* precvData, int len, string *pstrDestAddr, int *pdes
     }
     return recvCnt;
 }
-bool CRSocket::create(int type)
+int CRSocket::create(int type)
 {
     switch(type){
         case SOCK_DGRAM:{
             sockFd = socket(AF_INET, SOCK_DGRAM, 0);
             if(sockFd < 0){
-                return false;
+                return -1;
             }else{
-                return true;
+                sockType = type;
+                return 0;
             }
         }
         default:{
             sockFd = -1;
-            return false;
+            return -1;
         }
     }
 }
 
-bool CRSocket::bind(char* pchSrcAddr, int srcPort)
+int CRSocket::connect(string strDestAddr, int destPort)
+{
+    if(sockFd < 0 || isConnect){
+        return -1;
+    }
+    if(sockType == SOCK_DGRAM){
+        if(verifyAddrPort(strDestAddr, destPort)){
+            destAddr.sin_family = AF_INET;
+            destAddr.sin_port = htons(destPort);
+            destAddr.sin_addr.s_addr = inet_addr(strDestAddr.c_str());
+            isConnect = true;
+            return true;
+        }else{
+            return -1;
+        }
+    }else{
+        return -1;
+    }
+}
+
+int CRSocket::bind(string strSrcAddr, int srcPort)
 {
     if(sockFd < 0){
         return -1;
     }
     // 如果socket未进行绑定则进行绑定
-//    if(!pSrcAddr){
-//        pSrcAddr = new struct sockaddr_in;
-//        pSrcAddr->sin_family = AF_INET;
-//
-//        if(srcPort > 0){
-//            pSrcAddr->sin_port = htons(srcPort);
-//        }else{
-//            pSrcAddr->sin_port = htons(10086);
-//        }
-//        // 没有指定IP地址则绑定本机的所有地址，否则绑定制定的IP地址
-//        if(!pchSrcAddr){
-//            pSrcAddr->sin_addr.s_addr = htonl(INADDR_ANY);
-//        }else{
-//            pSrcAddr->sin_addr.s_addr = inet_addr(pchSrcAddr);
-//        }
-//
-//    }else{ // 重复绑定则返回false
-//        return false;
-//    }
-//
-//    if(::bind(sockFd, (struct sockaddr *)pSrcAddr, sizeof(*pSrcAddr)) < 0){
-//        return false;
-//    }else{
-//        return true;
-//    }
+    if(!isBind){
+        srcAddr.sin_family = AF_INET;
+
+        if(srcPort > 0){
+            srcAddr.sin_port = htons(srcPort);
+        }else{
+            // 之后将其改成随机分配端口
+            return -1;
+        }
+        // 没有指定IP地址则绑定本机的所有地址，否则绑定指定的IP地址
+        if(strSrcAddr == ""){
+            srcAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        }else{
+            srcAddr.sin_addr.s_addr = inet_addr(strSrcAddr.c_str());
+        }
+
+    }else{ // 重复绑定则返回false
+        return -1;
+    }
+
+    if(::bind(sockFd, (struct sockaddr *)&srcAddr, sizeof(srcAddr)) < 0){
+        return -1;
+    }else{
+        isBind = true;
+        return 0;
+    }
 }
 
 bool CRSocket::close()
 {
     ::close(sockFd);
     sockFd = -1;
+    sockType = -1;
+    isConnect = false;
+    isBind = false;
     return false;
 }
