@@ -3,6 +3,8 @@
 CRSocket::CRSocket()
 {
     sockFd = -1;
+    isConnect = false;
+    isBind = false;
     //srcPort = -1;
     //destPort = -1;
 }
@@ -74,31 +76,35 @@ bool CRSocket::bind(char* pchSrcAddr, int srcPort)
         return -1;
     }
     // 如果socket未进行绑定则进行绑定
-//    if(!pSrcAddr){
-//        pSrcAddr = new struct sockaddr_in;
-//        pSrcAddr->sin_family = AF_INET;
-//
-//        if(srcPort > 0){
-//            pSrcAddr->sin_port = htons(srcPort);
-//        }else{
-//            pSrcAddr->sin_port = htons(10086);
-//        }
-//        // 没有指定IP地址则绑定本机的所有地址，否则绑定制定的IP地址
-//        if(!pchSrcAddr){
-//            pSrcAddr->sin_addr.s_addr = htonl(INADDR_ANY);
-//        }else{
-//            pSrcAddr->sin_addr.s_addr = inet_addr(pchSrcAddr);
-//        }
-//
-//    }else{ // 重复绑定则返回false
-//        return false;
-//    }
-//
-//    if(::bind(sockFd, (struct sockaddr *)pSrcAddr, sizeof(*pSrcAddr)) < 0){
-//        return false;
-//    }else{
-//        return true;
-//    }
+    if(!isBind){
+
+        destAddr.sin_family = AF_INET;
+
+        if(srcPort > 0){
+            destAddr.sin_port = htons(srcPort);
+        }else{
+            // 未解决如何随机分配端口
+            destAddr.sin_port = htons(startPort);
+        }
+        // 没有指定IP地址则绑定本机的所有地址，否则绑定制定的IP地址
+        if(!pchSrcAddr){
+            destAddr.sin_addr.s_addr = htonl(INADDR_ANY);
+        }else{
+            destAddr.sin_addr.s_addr = inet_addr(pchSrcAddr);
+        }
+
+    }else{ // 重复绑定则返回false
+        return false;
+    }
+
+    if(::bind(sockFd, (struct sockaddr *)&destAddr, sizeof(destAddr)) < 0){
+        isBind = true;
+        cout << errno << endl;
+        perror("bind");
+        return false;
+    }else{
+        return true;
+    }
 }
 
 bool CRSocket::close()

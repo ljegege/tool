@@ -6,7 +6,13 @@
 #include <fcntl.h>
 #include <iostream>
 #include <string>
+#include <stdio.h>
+#include <stdlib.h>
+#include <errno.h>
 using namespace std;
+
+const int startPort = 2000;
+const int maxUdpPort = 65535;
 class CRSocket
 {
 private:
