@@ -19,6 +19,7 @@ private:
     int sockFd;
     bool isConnect;
     bool isBind;
+    int sockType;
     struct sockaddr_in srcAddr;
     struct sockaddr_in destAddr;
     //int srcPort, destPort;
