@@ -17,19 +17,23 @@ class CRSocket
 {
 private:
     int sockFd;
+    int sockType;
     bool isConnect;
     bool isBind;
     int sockType;
     struct sockaddr_in srcAddr;
     struct sockaddr_in destAddr;
     //int srcPort, destPort;
-
+protected:
+    inline bool verifyAddrPort(string addr, int port);
 public:
     CRSocket();
     ~CRSocket();
-    int sendto(char* psendData, int len, string strDestAddr, int destPort, int flag = 0);
-    int recvfrom(char* precvData, int len, string *pstrDestAddr, int *pdestPort, int flag = 0);
+    int create(int type);
+    int connect(string strDestAddr, int destPort);
+    int sendto(char* psendData, int len, string strDestAddr = "", int destPort = -1, int flag = 0);
+    int recvfrom(char* precvData, int len, string *pstrDestAddr = NULL, int *pdestPort = NULL, int flag = 0);
     bool close();
-    bool create(int type);
-    bool bind(char* pchSrcAddr, int srcPort);
+
+    int bind(string strSrcAddr = "", int srcPort = -1);
 };
