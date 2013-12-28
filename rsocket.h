@@ -24,15 +24,15 @@ private:
     struct sockaddr_in destAddr;
     //int srcPort, destPort;
 protected:
-    inline bool verifyAddrPort(string addr, int port);
+    inline bool VerifyAddrPort(string addr, int port);
 public:
     CRSocket();
     ~CRSocket();
-    int create(int type);
-    int connect(string strDestAddr, int destPort);
-    int sendto(char* psendData, int len, string strDestAddr = "", int destPort = -1, int flag = 0);
-    int recvfrom(char* precvData, int len, string *pstrDestAddr = NULL, int *pdestPort = NULL, int flag = 0);
-    bool close();
+    int Create(int type);
+    int Connect(string strDestAddr, int destPort);
+    int Sendto(char* psendData, int len, string strDestAddr = "", int destPort = -1, int flag = 0);
+    int Recvfrom(char* precvData, int len, string *pstrDestAddr = NULL, int *pdestPort = NULL, int flag = 0);
+    bool Close();
 
-    int bind(string strSrcAddr = "", int srcPort = -1);
+    int Bind(string strSrcAddr = "", int srcPort = -1);
 };

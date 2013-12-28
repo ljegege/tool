@@ -13,7 +13,7 @@ CRSocket::~CRSocket()
     ::close(sockFd);
 }
 
-inline bool CRSocket::verifyAddrPort(string addr, int port)
+inline bool CRSocket::VerifyAddrPort(string addr, int port)
 {
     if(port == -1 || addr == "") {
         return false;
@@ -21,16 +21,16 @@ inline bool CRSocket::verifyAddrPort(string addr, int port)
         return true;
     }
 }
-int CRSocket::sendto(char* psendData, int len, string strDestAddr, int destPort, int flag)
+int CRSocket::Sendto(char* psendData, int len, string strDestAddr, int destPort, int flag)
 {
     if(sockFd < 0 || sockType != SOCK_DGRAM) {
         return -1;
     }
 
-    if(!verifyAddrPort(strDestAddr, destPort)) {
+    if(!VerifyAddrPort(strDestAddr, destPort)) {
         // 判断是否已经connect
         if(isConnect) {
-            return ::sendto(sockFd, psendData, len, 0, (struct sockaddr *)&destAddr, sizeof(destAddr));
+            return sendto(sockFd, psendData, len, 0, (struct sockaddr *)&destAddr, sizeof(destAddr));
         } else {
             return -1;
         }
@@ -40,11 +40,11 @@ int CRSocket::sendto(char* psendData, int len, string strDestAddr, int destPort,
         tmpDestAddr.sin_family = AF_INET;
         tmpDestAddr.sin_port = htons(destPort);
         tmpDestAddr.sin_addr.s_addr = inet_addr(strDestAddr.c_str());
-        return ::sendto(sockFd, psendData, len, 0, (struct sockaddr *)&tmpDestAddr, sizeof(destAddr));
+        return sendto(sockFd, psendData, len, 0, (struct sockaddr *)&tmpDestAddr, sizeof(destAddr));
     }
 }
 
-int CRSocket::recvfrom(char* precvData, int len, string *pstrDestAddr, int *pdestPort, int flag)
+int CRSocket::Recvfrom(char* precvData, int len, string *pstrDestAddr, int *pdestPort, int flag)
 {
     if(sockFd < 0 || sockType != SOCK_DGRAM) {
         return -1;
@@ -61,7 +61,7 @@ int CRSocket::recvfrom(char* precvData, int len, string *pstrDestAddr, int *pdes
     }
     return recvCnt;
 }
-int CRSocket::create(int type)
+int CRSocket::Create(int type)
 {
     switch(type) {
     case SOCK_DGRAM: {
@@ -80,7 +80,7 @@ int CRSocket::create(int type)
     }
 }
 
-int CRSocket::connect(string strDestAddr, int destPort)
+int CRSocket::Connect(string strDestAddr, int destPort)
 {
     if(sockFd < 0 || isConnect) {
         return -1;
@@ -100,7 +100,7 @@ int CRSocket::connect(string strDestAddr, int destPort)
     }
 }
 
-int CRSocket::bind(string strSrcAddr, int srcPort)
+int CRSocket::Bind(string strSrcAddr, int srcPort)
 {
     if(sockFd < 0) {
         return -1;
@@ -119,7 +119,7 @@ int CRSocket::bind(string strSrcAddr, int srcPort)
 
     if(srcPort > 0) {
         srcAddr.sin_port = htons(srcPort);
-        if(::bind(sockFd, (struct sockaddr *)&srcAddr, sizeof(srcAddr)) < 0) {
+        if(bind(sockFd, (struct sockaddr *)&srcAddr, sizeof(srcAddr)) < 0) {
             perror("bind");
             return false;
         } else {
@@ -130,7 +130,7 @@ int CRSocket::bind(string strSrcAddr, int srcPort)
         // 未指定端口时则随机分配端口
         for(int port = startPort; port <= maxUdpPort; ++port) {
             srcAddr.sin_port = htons(port);
-            if(::bind(sockFd, (struct sockaddr *)&srcAddr, sizeof(srcAddr)) == 0) {
+            if(bind(sockFd, (struct sockaddr *)&srcAddr, sizeof(srcAddr)) == 0) {
                 continue;
             } else {
                 isBind = true;
@@ -142,9 +142,9 @@ int CRSocket::bind(string strSrcAddr, int srcPort)
 
 }
 
-bool CRSocket::close()
+bool CRSocket::Close()
 {
-    ::close(sockFd);
+    close(sockFd);
     sockFd = -1;
     sockType = -1;
     isConnect = false;
